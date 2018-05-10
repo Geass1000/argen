@@ -1,5 +1,10 @@
 
 export namespace DI {
+    export interface InstanceParam {
+        injector: boolean;
+        value: any;
+    }
+
     export interface Entity {
         target: any;
         options: EntityOptions;
