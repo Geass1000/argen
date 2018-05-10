@@ -37,14 +37,46 @@ export class Entity {
     }
 
     /**
-     * Returns the instance of the DI Entity.
+     * Returns the params for the instance of the DI Entity.
      *
      * @return {type}
      */
-    public get (): any {
+    public getInstanceParams (): any {
         if (!this.fromEntity) {
             throw new Errors.DIError(`${this.className} - get: Entity is not registred!`);
         }
+
+        const listOfParams: any[] = Reflect.getMetadata('design:paramtypes', this.target);
+
+        const injectors = Array.from(this.injectors.values());
+        const constructorInjectors = _.filter(injectors, (injector) => {
+            return _.isUndefined(injector.propertyName) && _.isNumber(injector.index);
+        });
+
+        const listOfInstanceParams = _.map(listOfParams, (param) => ({
+            injector: false,
+            value: param,
+        }));
+        const numOfInstanceParams = listOfInstanceParams.length;
+
+        _.map(constructorInjectors, (injector) => {
+            if (numOfInstanceParams <= injector.index) {
+                throw new Errors.DIError(`${this.className} - get: Param ${injector.index} is not exist!`);
+            }
+
+            listOfInstanceParams[injector.index] = {
+                injector: true,
+                value: injector,
+            };
+        });
+
+        _.map(listOfInstanceParams, (param, index) => {
+            if (this.isNativeType(param)) {
+                throw new Errors.DIError(`${this.className} - get: Param ${index} has \`native\` type!`);
+            }
+        });
+
+        return listOfInstanceParams;
     }
 
     /**
