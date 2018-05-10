@@ -96,4 +96,14 @@ export class Entity {
     private getInjectorKey (injector: Interfaces.DI.Injector): string {
         return `${injector.propertyName}:${injector.index}`;
     }
+
+    /**
+     * Checks the metatype. If metatype is a `native` type method will return `true'.
+     *
+     * @return {boolean}
+     */
+    private isNativeType (metatype: any): boolean {
+      const types: any[] = [ String, Boolean, Number, Array, Object ];
+      return _.includes(types, (type) => metatype === type);
+    }
 }
