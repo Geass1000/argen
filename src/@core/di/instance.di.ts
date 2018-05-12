@@ -9,6 +9,8 @@ import * as Errors from '../errors';
 export class Entity {
     public readonly className: string = 'DI:Entity';
 
+    private reflect: typeof Reflect;
+
     /**
      * `active` status flag.
      *
@@ -31,6 +33,7 @@ export class Entity {
     public options: Interfaces.DI.EntityOptions;
 
     constructor (private target: any) {
+        this.reflect = Reflect;
         this.fromEntity = false;
         this.options = _.cloneDeep(Consts.DI.defEntityOptions);
         this.injectors = new Map();
@@ -46,7 +49,7 @@ export class Entity {
             throw new Errors.DIError(`${this.className} - get: Entity is not registred!`);
         }
 
-        const listOfParams: any[] = Reflect.getMetadata('design:paramtypes', this.target);
+        const listOfParams: any[] = this.reflect.getMetadata('design:paramtypes', this.target);
 
         const injectors = Array.from(this.injectors.values());
         const constructorInjectors = _.filter(injectors, (injector) => {
