@@ -1,6 +1,6 @@
 
 export namespace DI {
-    export interface InstanceParam {
+    export interface MethodParam {
         injector: boolean;
         value: any;
     }
