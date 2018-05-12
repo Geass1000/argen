@@ -139,6 +139,7 @@ export class Entity {
      */
     private isNativeType (metatype: any): boolean {
       const types: any[] = [ String, Boolean, Number, Array, Object ];
-      return _.includes(types, (type) => metatype === type);
+      const metatypeName: string = _.get(metatype, 'name', '');
+      return _.includes(types, (type) => metatypeName === type.name);
     }
 }
