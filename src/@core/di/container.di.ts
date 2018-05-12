@@ -1,7 +1,11 @@
 import * as Interfaces from '../interfaces';
 
+import { Entity } from './entity.di';
+
+type EntityKey = any;
+
 export class Container {
-    private store: any;
+    private store: Map<EntityKey, Entity> = new Map();
 
     public addEntity (entity: Interfaces.DI.Entity) {
     }
