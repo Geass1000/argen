@@ -49,37 +49,61 @@ export class Entity {
             throw new Errors.DIError(`${this.className} - get: Entity is not registred!`);
         }
 
-        const listOfParams: any[] = this.reflect.getMetadata('design:paramtypes', this.target);
-
         const injectors = Array.from(this.injectors.values());
         const constructorInjectors = _.filter(injectors, (injector) => {
             return _.isUndefined(injector.propertyName) && _.isNumber(injector.index);
         });
 
-        const listOfInstanceParams = _.map(listOfParams, (param) => ({
-            injector: false,
-            value: param,
-        }));
-        const numOfInstanceParams = listOfInstanceParams.length;
+        const listOfInstanceParams = this.getMethodParams('constructor', constructorInjectors);
 
-        _.map(constructorInjectors, (injector) => {
-            if (numOfInstanceParams <= injector.index) {
-                throw new Errors.DIError(`${this.className} - get: Param ${injector.index} is not exist!`);
+        // TODO: Maybe unused.
+        _.map(listOfInstanceParams, (param, index) => {
+            if (param.injector) {
+                return;
             }
 
-            listOfInstanceParams[injector.index] = {
-                injector: true,
-                value: injector,
-            };
-        });
-
-        _.map(listOfInstanceParams, (param, index) => {
-            if (this.isNativeType(param)) {
+            if (this.isNativeType(param.value)) {
                 throw new Errors.DIError(`${this.className} - get: Param ${index} has \`native\` type!`);
             }
         });
 
         return listOfInstanceParams;
+    }
+
+    /**
+     * Returns the params of the specific method of the DI Entity.
+     *
+     * @param  {string} methodName - name of the method of the DI Entity
+     * @param  {Interfaces.DI.Injector[]} injectors - list of the param injectors
+     * @return {Interfaces.DI.MethodParam[]}
+     */
+    public getMethodParams (methodName: string, injectors: Interfaces.DI.Injector[]): Interfaces.DI.MethodParam[] {
+        const reflectMethodName = methodName === 'constructor' ? undefined : methodName;
+        const reflectListOfParams: any[] = this.reflect
+            .getMetadata('design:paramtypes', this.target, reflectMethodName);
+
+        if (_.isNil(reflectListOfParams)) {
+            throw new Errors.DIError(`${this.className} - get: Entity method is not registred!`);
+        }
+
+        const listOfMethodParams: Interfaces.DI.MethodParam[] = _.map(reflectListOfParams, (param) => ({
+            injector: false,
+            value: param,
+        }));
+
+        const numOfMethodParams = listOfMethodParams.length;
+        _.map(injectors, (injector) => {
+            if (numOfMethodParams <= injector.index) {
+                throw new Errors.DIError(`${this.className} - get: Param ${injector.index} is not exist!`);
+            }
+
+            listOfMethodParams[injector.index] = {
+                injector: true,
+                value: injector,
+            };
+        });
+
+        return listOfMethodParams;
     }
 
     /**
@@ -138,8 +162,8 @@ export class Entity {
      * @return {boolean}
      */
     private isNativeType (metatype: any): boolean {
-      const types: any[] = [ String, Boolean, Number, Array, Object ];
-      const metatypeName: string = _.get(metatype, 'name', '');
-      return _.includes(types, (type) => metatypeName === type.name);
+        const types: any[] = [ String, Boolean, Number, Object ];
+        const metatypeName: string = _.get(metatype, 'name', '');
+        return _.includes(types, (type) => metatypeName === type.name);
     }
 }
